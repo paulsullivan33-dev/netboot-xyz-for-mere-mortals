@@ -1,0 +1,55 @@
+t06 — Serving the web assets yourself, over HTTP, and proving the bytes
+
+The lab mirrored the hosted layout in a local folder:
+
+  site/
+    ipxe/          the bootloaders + autoexec.ipxe + checksums
+    3.0.3/         the unpacked menus.tar.gz, plus one file of
+                   the lab's own: custom.ipxe (kept in the
+                   lab folder of this guide)
+
+and served it on the loopback address only:
+
+$ python3 -m http.server 18082 --bind 127.0.0.1 --directory site
+
+Fetching the files back and hashing what arrived:
+
+$ curl -s http://127.0.0.1:18082/3.0.3/menu.ipxe | sha256sum
+9c984baf059d48820269eab71b4b6267f3efbf9bcc0ed4b2dfa84a966f81cb31  -
+$ sha256sum menus/menu.ipxe
+9c984baf059d48820269eab71b4b6267f3efbf9bcc0ed4b2dfa84a966f81cb31  menus/menu.ipxe
+
+$ curl -s http://127.0.0.1:18082/ipxe/netboot.xyz.efi | sha256sum
+56bb21e9f6d79eadb947e7031a088c9afcc48aa1eb99b2502d161f0b1c586a82  -
+(matches the published checksum in t02 exactly)
+
+$ curl -s http://127.0.0.1:18082/ipxe/netboot.xyz.iso | sha256sum
+2206b05c1c7a8ec7a7a4356dd5f811e19c8081d7d5e2bc856f1f3f4059c5fed1  -
+(also matches t02)
+
+The lab's own file is served the same way:
+
+$ curl -s http://127.0.0.1:18082/3.0.3/custom.ipxe | head -4
+#!ipxe
+# A house menu of your own, chained from the main menu's custom slot.
+menu Workshop tools
+item shell  iPXE shell
+
+Status codes, for the record:
+
+/                    -> 200   (the menus' index.html)
+/ipxe/               -> 200
+/3.0.3/boot.cfg      -> 200
+/3.0.3/version.ipxe  -> 200
+/nope.ipxe           -> 404
+
+Server stopped afterwards (a check fetch then returns
+curl's 000: nothing is listening).
+
+An honest wart: the lab's first attempt fetched the menu
+and bootloader in the same second the server started, got
+empty replies, and hashed the empty string
+(e3b0c442... is the well-known SHA-256 of nothing). Waiting
+for the port to answer before fetching — a one-line retry
+loop — fixed it. A hash that does not match is information;
+in this case it was pointing at the fetch, not the file.

@@ -1,0 +1,36 @@
+t01 — Downloading the boot files, and what each file actually is
+
+Downloads from the official release URL pattern
+https://github.com/netbootxyz/netboot.xyz/releases/download/3.0.3/<file>
+
+$ ls -la downloads/
+total 7228
+-rw-r--r-- 1  2453  autoexec.ipxe
+-rw-r--r-- 1 399302  menus.tar.gz
+-rw-r--r-- 1  4002   netboot.xyz-sha256-checksums.txt
+-rw-r--r-- 1 323584  netboot.xyz-snp.efi
+-rw-r--r-- 1 118868  netboot.xyz-undionly.kpxe
+-rw-r--r-- 1 1185280 netboot.xyz.efi
+-rw-r--r-- 1 2097152 netboot.xyz.img
+-rw-r--r-- 1 2428928 netboot.xyz.iso
+-rw-r--r-- 1 413908  netboot.xyz.kpxe
+-rw-r--r-- 1 412598  netboot.xyz.lkrn
+
+$ file netboot.xyz.efi netboot.xyz.kpxe netboot.xyz.iso netboot.xyz.img netboot.xyz.lkrn menus.tar.gz
+netboot.xyz.efi:  PE32+ executable (DLL) (EFI application) x86-64 Mono/.Net assembly, for MS Windows, 7 sections
+netboot.xyz.kpxe: data
+netboot.xyz.iso:  ISO 9660 CD-ROM filesystem data 'iPXE' (bootable)
+netboot.xyz.img:  DOS/MBR boot sector; partition 4 : ID=0x1, active, start-CHS (0x0,1,1), end-CHS (0x1,63,32), startsector 32, 4064 sectors
+netboot.xyz.lkrn: Linux kernel x86 boot executable bzImage, version 2.0.0+ (g26f46), RO-rootFS,
+menus.tar.gz:     gzip compressed data, from Unix, original size modulo 2^32 2222080
+
+Notes:
+- The .efi really is a UEFI application (PE32+), the .iso a
+  bootable ISO 9660 image labelled "iPXE", the .img a raw
+  disk image with an MBR partition table exactly 2 MiB long,
+  and the .lkrn a Linux-kernel-shaped image (that is how a
+  bootloader chainloads it). The .kpxe is raw binary — `file`
+  has no kinder word for it than "data".
+- The version string inside the .lkrn, "2.0.0+ (g26f46)",
+  matches the iPXE commit in the checksums header (t00):
+  the bootloaders are iPXE 2.0.0 builds.

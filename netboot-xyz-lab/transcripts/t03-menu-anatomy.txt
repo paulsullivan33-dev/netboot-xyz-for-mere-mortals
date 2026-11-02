@@ -1,0 +1,98 @@
+t03 — Inside menus.tar.gz: the menu is a folder of small scripts
+
+$ tar -tzf menus.tar.gz | wc -l
+218
+$ ls menus | wc -l
+109
+
+218 archive entries unpack to 109 top-level items: one
+.ipxe script per menu or distribution, plus boot.cfg, an
+index.html, memdisk and wimboot helper binaries, and a
+sigs/ folder holding 109 detached signatures, one per file
+(4mlinux.ipxe.sig, about.ipxe.sig, ...). Those signatures
+are what the bootloaders check when sigs_enabled is true
+(see boot.cfg below).
+
+The top of the main menu, menu.ipxe:
+
+#!ipxe
+
+:start
+isset ${arch} && goto skip_arch_detect ||
+cpuid --ext 29 && set arch x86_64 || set arch i386
+iseq ${buildarch} arm64 && set arch arm64 ||
+:skip_arch_detect
+chain --autofree boot.cfg ||
+echo Attempting to retrieve latest upstream version number...
+chain --timeout 5000 https://boot.netboot.xyz/version.ipxe ||
+[...]
+
+:main_menu
+clear menu
+[...]
+isset ${next-server} && menu ${site_name} v${version} - next-server: ${next-server} || menu ${site_name}
+item --gap Default:
+item local ${space} Boot from local hdd
+item --gap Distributions:
+iseq ${menu_linux} 1 && item linux ${space} Linux Network Installs (64-bit) ||
+iseq ${menu_live} 1 && item live ${space} Live CDs ||
+iseq ${menu_bsd} 1 && item bsd ${space} BSD Installs ||
+[...]
+item shell ${space} iPXE shell
+item netinfo ${space} Network card info
+item about ${space} About netboot.xyz
+item --gap Signature Checks:
+item sig_check ${space} netboot.xyz [ enabled: ${sigs_enabled} ]
+
+So the "menu" is a program: it detects the CPU architecture,
+loads boot.cfg for its settings, and only offers the sections
+boot.cfg enabled for that architecture and firmware type.
+
+boot.cfg (abridged) — the settings and the mirror book:
+
+set site_name netboot.xyz
+set boot_domain boot.netboot.xyz/3.0.3
+set memdisk http://${boot_domain}/memdisk
+isset ${live_endpoint} || set live_endpoint https://github.com/netbootxyz
+set sigs_enabled true
+iseq ${efi/SecureBoot} 01 && set sigs_enabled false ||
+set sigs http://${boot_domain}/sigs/
+iseq ${platform} efi && set ipxe_disk netboot.xyz-snponly.efi || set ipxe_disk netboot.xyz-undionly.kpxe
+isset ${boot_timeout} || set boot_timeout 300000
+
+# then, per distribution, the official mirror to install from:
+set debian_mirror http://deb.debian.org
+set ubuntu_mirror http://archive.ubuntu.com
+set fedora_mirror http://mirrors.kernel.org
+[... 20+ more distributions ...]
+
+# then architecture gates: x86_64, i386 and arm64 each get a
+# different set of menu_* switches, and UEFI turns some off.
+
+A distribution menu is small and readable. debian.ipxe
+(abridged):
+
+:debian
+set os Debian
+[...]
+menu ${os} - ${os_arch}
+item trixie ${space} ${os} 13.0 (trixie)
+item bookworm ${space} ${os} 12.0 (bookworm)
+item forky ${space} ${os} forky (testing)
+item sid ${space} ${os} sid (unstable)
+[...]
+# then it builds the netboot installer path on the mirror
+# chosen in boot.cfg and loads kernel + initrd from there.
+
+Live images work differently — their kernels and filesystems
+are netboot.xyz's own re-releases on GitHub, addressed
+through live_endpoint. From live-debian.ipxe:
+
+set squash_url ${live_endpoint}/debian-squash/releases/download/13.6.0-b92f504b/filesystem.squashfs
+set kernel_url ${live_endpoint}/debian-core-13/releases/download/13.4.0-0a426450/
+
+version.ipxe, the whole file:
+
+#!ipxe
+set upstream_version 3.0.3
+exit

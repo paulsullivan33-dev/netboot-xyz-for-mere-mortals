@@ -1,0 +1,22 @@
+t07 — The USB image: what writing it does, proven against a file
+
+Writing a USB stick means writing this raw image over the
+whole device (see the project's docs; the guide's USB
+chapter is documented-only because the lab has no USB device
+to give). The write itself can be rehearsed against an
+ordinary file, which proves the image copies byte-for-byte:
+
+$ dd if=downloads/netboot.xyz.img of=usb-copy.img bs=1M status=none
+$ sha256sum downloads/netboot.xyz.img usb-copy.img
+bcb1f30942a2d5f2a81326fd6c585a0687578a49c33d3713dff951c777c27885  downloads/netboot.xyz.img
+bcb1f30942a2d5f2a81326fd6c585a0687578a49c33d3713dff951c777c27885  usb-copy.img
+
+(usb-copy.img deleted after the check.)
+
+Facts about the image, from t01: exactly 2 MiB
+(2,097,152 bytes = 4096 sectors of 512), a DOS/MBR disk
+with one active FAT partition. It is not an installer for
+anything — it is the iPXE bootloader on a stick: boot it,
+and it does DHCP and chains to the menu like any other
+netboot.xyz bootloader. The 2 MiB size is the whole point:
+any cast-off USB key, however small and old, can hold it.

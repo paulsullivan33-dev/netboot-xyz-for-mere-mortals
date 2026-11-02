@@ -1,0 +1,23 @@
+t02 — Verifying the downloads against the published checksums
+
+The published checksums file lists every asset in the form
+"<sha256> *<filename>". The lab filtered it to the files it
+downloaded (that filter is the lab's verify-downloads.sh),
+then ran sha256sum in check mode:
+
+$ sha256sum -c lab-checksums.txt
+autoexec.ipxe: OK
+netboot.xyz-snp.efi: OK
+netboot.xyz-undionly.kpxe: OK
+netboot.xyz.efi: OK
+netboot.xyz.img: OK
+netboot.xyz.iso: OK
+netboot.xyz.kpxe: OK
+netboot.xyz.lkrn: OK
+
+8 of 8 verified. The individual hashes the guide relies on:
+
+56bb21e9f6d79eadb947e7031a088c9afcc48aa1eb99b2502d161f0b1c586a82 *netboot.xyz.efi
+2206b05c1c7a8ec7a7a4356dd5f811e19c8081d7d5e2bc856f1f3f4059c5fed1 *netboot.xyz.iso
+bcb1f30942a2d5f2a81326fd6c585a0687578a49c33d3713dff951c777c27885 *netboot.xyz.img
+a1aba898b89a29d165089470ee15a742ebc39529236a06608464d5cb6c892d93 *netboot.xyz.kpxe

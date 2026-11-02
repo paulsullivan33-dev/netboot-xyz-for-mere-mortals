@@ -1,0 +1,14 @@
+#!ipxe
+# A house menu of your own, chained from the main menu's custom slot.
+menu Workshop tools
+item shell  iPXE shell
+item local  Boot from local disk
+item reboot Reboot
+choose pick || goto local
+goto ${pick}
+:local
+exit
+:shell
+shell
+:reboot
+reboot

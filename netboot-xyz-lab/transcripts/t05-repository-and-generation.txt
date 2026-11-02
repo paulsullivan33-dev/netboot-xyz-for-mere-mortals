@@ -1,0 +1,68 @@
+t05 — Where the files come from: the repository that generates them
+
+$ git clone --depth 1 --branch 3.0.3 https://github.com/netbootxyz/netboot.xyz.git repo
+$ cd repo && git log --oneline -1 && cat version.txt
+670f279 Version bump for netbootxyz/debian-core-13:master new tag 13.6.0-f21f0a6b
+3.0.3
+
+Repo root, abridged:
+
+  endpoints.yml        live-asset endpoints (see below)
+  site.yml             the Ansible playbook that builds all of it
+  user_overrides.yml   your overrides, kept out of the defaults
+  roles/netbootxyz/
+    defaults/main.yml  every default setting (mirrors, versions, bootloaders)
+    templates/menu/    103 *.ipxe.j2 templates -> the menu files
+    templates/disks/   the scripts embedded in the bootloaders
+    templates/local-vars.ipxe.j2
+  etc/netbootxyz/custom/custom.ipxe.j2   the sample custom menu
+
+endpoints.yml — the live images' address book:
+
+$ grep -cE "^  [a-z0-9-]+:$" endpoints.yml
+127
+
+  dban:
+    path: /asset-mirror/releases/download/2.3.0-c3b4b7a6/
+    files:
+    - DBAN.BZI
+    os: dban
+    version: 2.3.0
+
+Each endpoint names a GitHub release (in a netbootxyz asset
+repository such as debian-squash, ubuntu-squash or
+asset-mirror), the files to load from it, and the OS,
+version and flavour it belongs to. The menu templates turn
+these rows into the set kernel_url / set squash_url lines
+seen in t03. 127 endpoints at this release.
+
+The embedded bootloader script, templates/disks/netboot.xyz.j2
+(abridged) — this is the program inside every .kpxe/.efi:
+
+set site_name {{ site_name }}
+set boot_domain {{ boot_domain }}
+[...]
+:start
+echo netboot.xyz - v${version}
+prompt --key m --timeout 4000 Hit the m key to open failsafe menu... && goto failsafe || goto dhcp
+:dhcp
+dhcp || goto netconfig
+isset ${next-server} && isset ${proxydhcp/next-server} && goto choose-tftp || ...
+# if it arrived by TFTP with a matching filename, it first
+# tries local-vars.ipxe and a local menu from that TFTP
+# server; otherwise it falls back, step by step, to
+# https://<boot_domain>/menu.ipxe, then http, then local boot.
+
+And the override hook, templates/local-vars.ipxe.j2 — a file
+you place on your own TFTP server to steer the boot without
+rebuilding anything:
+
+### set to enable github custom menu
+#set github_user my_github_username
+### Sets the local live endpoint for the users local installation
+#set live_endpoint http://my_ip_address:8080
+### Sets the default boot timeout
+#set boot_timeout 300000
+### Media Locations for Licensed Distros
+#set rhel_base_url http://my_rhel_mirror/rhel/
+#set win_base_url http://my_windows_mirror/windows/

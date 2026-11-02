@@ -1,0 +1,40 @@
+t00 — Which release is current, and what does it publish?
+
+The GitHub REST API was rate-limited from the lab's shared
+address, so the release was identified two other ways: the
+repository's own tags over git, and the release page's asset
+listing over HTTPS.
+
+$ git ls-remote --tags https://github.com/netbootxyz/netboot.xyz.git | tail -5
+ff0a12bab63e5a56d22f53471a9ec4f014d493d6  refs/tags/3.0.1-RC
+42e27cde97b5a87ffe91d702f6390fcc584a81cf  refs/tags/3.0.2
+42e27cde97b5a87ffe91d702f6390fcc584a81cf  refs/tags/3.0.2-RC
+670f279645091994d39c3b63e27b20f72a8c3486  refs/tags/3.0.3
+670f279645091994d39c3b63e27b20f72a8c3486  refs/tags/3.0.3-RC
+
+Latest stable release: 3.0.3.
+
+Asset listing of release 3.0.3 (from
+https://github.com/netbootxyz/netboot.xyz/releases/expanded_assets/3.0.3),
+abridged to the files this lab used, sizes as shown there:
+
+  autoexec.ipxe                       2.4 KB
+  menus.tar.gz                        (the menu web assets)
+  netboot.xyz-sha256-checksums.txt
+  netboot.xyz.efi                     1.13 MB
+  netboot.xyz.iso                     2.3 MB
+  netboot.xyz.img                     2.51 MB (USB image; see t07)
+  netboot.xyz.kpxe
+  netboot.xyz.lkrn
+  netboot.xyz-snp.efi
+  netboot.xyz-undionly.kpxe
+  ... plus -legacy, -metal, -sb (Secure Boot), -arm64 and
+  multiarch variants of the same shapes.
+
+The release also publishes one checksums file for everything.
+Its header names the build and the iPXE source it was built
+from:
+
+$ head -3 netboot.xyz-sha256-checksums.txt
+# netboot.xyz bootloaders generated at Sat Aug 29 03:24:53 UTC 2026
+# iPXE Commit: https://github.com/ipxe/ipxe/commit/26f46a2b4f047bc0732a29c805ac798ef01204c4

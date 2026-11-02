@@ -1,0 +1,25 @@
+t04 — The hosted service serves the same files the release ships
+
+The bootloaders chain to boot.netboot.xyz/<version>/.
+The lab fetched the live menu and compared it with the copy
+inside menus.tar.gz:
+
+$ curl -s https://boot.netboot.xyz/3.0.3/menu.ipxe -o live-menu.ipxe
+$ diff live-menu.ipxe menus/menu.ipxe && echo IDENTICAL
+IDENTICAL
+
+$ curl -s https://boot.netboot.xyz/version.ipxe
+#!ipxe
+set upstream_version 3.x
+exit
+
+Two observations:
+
+- The versioned path (boot.netboot.xyz/3.0.3/) serves exactly
+  the release's menu files, byte for byte. Self-hosting the
+  tarball is therefore not an approximation of the service;
+  it is the same content, served by you.
+- The unversioned version.ipxe answers "3.x" — it exists so
+  an older bootloader can learn that a newer major line
+  exists, which is why menu.ipxe fetches it with a short
+  timeout and carries on regardless of the answer.
